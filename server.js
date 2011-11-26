@@ -60,8 +60,33 @@ function send_response(socket, response_id, payload) {
 }
 
 var issues = io.of("/issues").on('connection', function (socket) {
-  socket.on("read", function (request) {
 
+  setInterval(function() {
+    email.fetch(function(headers, body) {
+      var model = {
+        subject: headers.subject,
+        description: body.bodyText,
+        reporter: headers.addressesFrom[0],
+        created_at: new Date(headers.messageDate).toJSON(),
+        message_id: headers.messageId
+      }
+
+      couchdb_request({
+        path: "/hotboy_inc_development/",
+        method: "POST"
+      }, model, function (err, response) {
+        console.log("Error: ", err)
+        console.log("Response: ", response)
+
+        model.id = response.id
+        model.rev = response.rev
+
+        socket.emit("new", {payload: model})
+      })
+    })
+  }, 15000)
+
+  socket.on("read", function (request) {
     var options = {}
       , response_processor
 
@@ -93,23 +118,5 @@ var email = new Email({
   username: 'blackcat@galaxycats.com',
   password: 'zQM38nN79r',
 })
-
-setInterval(function() {
-  email.fetch(function(headers, body) {
-    couchdb_request({
-      path: "/hotboy_inc_development/",
-      method: "POST"
-    }, {
-      subject: headers.subject,
-      description: body.bodyText,
-      reporter: headers.addressesFrom[0],
-      created_at: new Date(headers.messageDate).toJSON(),
-      message_id: headers.messageId
-    }, function (err, response) {
-      console.log("Error: ", err)
-      console.log("Response: ", response)
-    })
-  })
-}, 15000)
 
 app.listen(3000)
