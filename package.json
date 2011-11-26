@@ -12,7 +12,8 @@
   "dependencies": {
     "express": "~2.5.1",
     "socket.io": "0.8.7",
-    "cluster": "~0.7.0"
+    "cluster": "~0.7.0",
+    "underscore": "~1.2.2"
   },
   "devDependencies": { 
     "expresso": "~0.9"
