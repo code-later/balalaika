@@ -97,7 +97,7 @@ var issues = io.of("/issues").on('connection', function (socket) {
       }
     }
     else {
-      options = {path: "/hotboy_inc_development/_design/couchapp/_view/issues?include_docs=true"}
+      options = {path: "/hotboy_inc_development/_design/couchapp/_view/by_created_at?include_docs=true"}
       response_processor = function (err, data, cb) {
         cb(data.rows.map(function(row) {
           return map_couchdb_document(row.doc)
