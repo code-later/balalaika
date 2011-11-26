@@ -1,13 +1,10 @@
-var path = require("path")
-require.paths.unshift(path.join(__dirname, "lib"))
-
 var express = require('express')
   , app = express.createServer()
   , io = require('socket.io').listen(app)
   , http = require("http")
   , fs = require("fs")
   , _ = require("underscore")
-  , Email = require("email").Email
+  , Email = require("./lib/email").Email
 
 app.configure(function() {
   app.use(express.bodyParser())
