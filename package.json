@@ -10,7 +10,7 @@
         { "name": "Dirk Breuer", "email": "dirk@galaxycats.com" }
   ],
   "dependencies": {
-    "express": "~2.3",
+    "express": "~2.5.1",
     "socket.io": "0.8.7",
     "cluster": "~0.7.0"
   },
