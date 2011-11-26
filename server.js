@@ -1,8 +1,12 @@
+var path = require("path")
+require.paths.unshift(path.join(__dirname, "lib"))
+
 var express = require('express')
   , app = express.createServer()
   , io = require('socket.io').listen(app)
   , http = require("http")
   , _ = require("underscore")
+  , Email = require("email").Email
 
 app.configure(function() {
   app.use(express.bodyParser())
@@ -19,7 +23,15 @@ var couchdb_default_options = {
   }
 }
 
-function couchdb_request(options, cb) {
+function couchdb_request(options, data, cb) {
+  if (typeof data === 'function') {
+    cb = data
+    data = undefined
+  }
+  else {
+    if (typeof data !== "string") data = JSON.stringify(data)
+  }
+
   return http.request(_.defaults(options, couchdb_default_options), function (res) {
     var body = ""
     res.on("data", function (chunk) { body += chunk })
@@ -28,7 +40,7 @@ function couchdb_request(options, cb) {
 
       cb(undefined, parsed_response)
     })
-  }).end()
+  }).end(data)
 }
 
 function map_couchdb_document(doc) {
@@ -76,5 +88,28 @@ var issues = io.of("/issues").on('connection', function (socket) {
     })
   })
 })
+
+var email = new Email({
+  username: 'blackcat@galaxycats.com',
+  password: 'zQM38nN79r',
+})
+
+setInterval(function() {
+  email.fetch(function(headers, body) {
+    couchdb_request({
+      path: "/hotboy_inc_development/",
+      method: "POST"
+    }, {
+      subject: headers.subject,
+      description: body.bodyText,
+      reporter: headers.addressesFrom[0],
+      created_at: new Date(headers.messageDate).toJSON(),
+      message_id: headers.messageId
+    }, function (err, response) {
+      console.log("Error: ", err)
+      console.log("Response: ", response)
+    })
+  })
+}, 15000)
 
 app.listen(3000)
