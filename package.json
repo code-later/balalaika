@@ -1,0 +1,21 @@
+{
+  "name": "Balalaika",
+  "description": "",
+  "keywords": ["server", "socket.io"],
+  "version": "1.0.0",
+  "homepage": "",
+  "repository": "",
+  "author": "Sebastian Cohnen <sebastian.cohnen@gmx.net>",
+  "contributors": [
+        { "name": "Dirk Breuer", "email": "dirk@galaxycats.com" }
+  ],
+  "dependencies": {
+    "express": "~2.3",
+    "socket.io": "0.8.7",
+    "cluster": "~0.7.0"
+  },
+  "devDependencies": { 
+    "expresso": "~0.9"
+  },
+  "engines": { "node": "~0.4" }
+}

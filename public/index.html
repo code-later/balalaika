@@ -1,0 +1,31 @@
+<html>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  var socket = io.connect('http://localhost/issues');
+  socket.on('new', function (data) {
+    console.log(data);
+  });
+
+  var response_callbacks = {}
+
+  socket.on("response", function(data) {
+    var callback = response_callbacks[data.header.response_id]
+
+    if (callback && typeof callback === "function") {
+      callback(data.payload, data.header)
+      delete response_callbacks[data.header.response_id]
+    }
+  })
+
+  function request(command, payload, cb) {
+    var response_id = command + "-" + socket.socket.sessionid + "-" + Math.random().toString()
+
+    response_callbacks[response_id] = cb
+
+    socket.emit(command, {header: {response_id: response_id}, payload: payload})
+  }
+
+  function getIssue(id, cb) {
+    request("get", {id: id}, cb)
+  }
+</script>
