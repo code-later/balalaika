@@ -2,6 +2,7 @@ var express = require('express')
   , app = express.createServer()
   , io = require('socket.io').listen(app)
   , http = require("http")
+  , _ = require("underscore")
 
 app.configure(function() {
   app.use(express.bodyParser())
@@ -9,34 +10,70 @@ app.configure(function() {
   app.use(express.static(__dirname + "/public"))
 })
 
-var id = 0
+var couchdb_default_options = {
+  host: "localhost",
+  port: 5984,
+  method: "GET",
+  headers: {
+    "Content-Type": "application/json"
+  }
+}
+
+function couchdb_request(options, cb) {
+  return http.request(_.defaults(options, couchdb_default_options), function (res) {
+    var body = ""
+    res.on("data", function (chunk) { body += chunk })
+    res.on("end", function() {
+      var parsed_response = JSON.parse(body)
+
+      cb(undefined, parsed_response)
+    })
+  }).end()
+}
+
+function map_couchdb_document(doc) {
+  doc.id = doc._id
+  doc.rev = doc._rev
+
+  return doc
+}
+
+function send_response(socket, response_id, payload) {
+  socket.emit("response", {
+    header: {response_id: response_id},
+    payload: payload
+  })
+
+  return socket
+}
 
 var issues = io.of("/issues").on('connection', function (socket) {
   socket.on("read", function (request) {
-    http.request({
-      host: "localhost",
-      port: 5984,
-      path: "/hotboy_inc_development/_all_docs?include_docs=true",
-      method: "GET"
-    }, function (res) {
-      var body = ""
-      res.on("data", function (chunk) { body += chunk })
-      res.on("end", function() {
-        var parsed_response = JSON.parse(body)
 
-        var payload = parsed_response.rows.map(function(row) {
-          var doc = row.doc
-          doc.id = doc._id
-          doc.rev = doc._rev
-          return row.doc
-        })
+    var options = {}
+      , response_processor
 
-        socket.emit("response", {
-          header: {response_id: request.header.response_id},
-          payload: payload
-        })
+    if (request.payload.id) {
+      options = { path: "/hotboy_inc_development/" + request.payload.id }
+      response_processor = function (err, doc, cb) {
+        cb(map_couchdb_document(doc))
+      }
+    }
+    else {
+      options = {path: "/hotboy_inc_development/_design/couchapp/_view/issues?include_docs=true"}
+      response_processor = function (err, data, cb) {
+        cb(data.rows.map(function(row) {
+          return map_couchdb_document(row.doc)
+        }))
+      }
+    }
+
+    couchdb_request(options, function(err, data) {
+      response_processor(err, data, function(processed_data) {
+        send_response(socket, request.header.response_id, processed_data)
       })
-    }).end()
+
+    })
   })
 })
 
