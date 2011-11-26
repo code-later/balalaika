@@ -5,6 +5,7 @@ var express = require('express')
   , app = express.createServer()
   , io = require('socket.io').listen(app)
   , http = require("http")
+  , fs = require("fs")
   , _ = require("underscore")
   , Email = require("email").Email
 
@@ -22,6 +23,8 @@ var couchdb_default_options = {
     "Content-Type": "application/json"
   }
 }
+
+var config = JSON.parse(fs.readFileSync("config/development.json", "utf8"))
 
 function couchdb_request(options, data, cb) {
   if (typeof data === 'function') {
@@ -114,9 +117,6 @@ var issues = io.of("/issues").on('connection', function (socket) {
   })
 })
 
-var email = new Email({
-  username: 'blackcat@galaxycats.com',
-  password: 'zQM38nN79r',
-})
+var email = new Email(config.email)
 
 app.listen(3000)
