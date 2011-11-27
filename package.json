@@ -15,7 +15,8 @@
     "cluster": "~0.7.0",
     "underscore": "~1.2.2",
     "imap": "~0.2.7",
-    "mailparser": "~0.1.2"
+    "mailparser": "~0.1.2",
+    "emailjs": "~0.1.19"
   },
   "devDependencies": { 
     "expresso": "~0.9"
