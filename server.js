@@ -3,6 +3,7 @@ var express = require('express')
   , io = require('socket.io').listen(app)
   , http = require("http")
   , fs = require("fs")
+  , crypto = require("crypto")
   , _ = require("underscore")
   , Email = require("./lib/email").Email
 
@@ -50,6 +51,12 @@ function map_couchdb_document(doc) {
   return doc
 }
 
+function add_gravatar_to_reporter(reporter) {
+  var gravatar_md5 = crypto.createHash("md5")
+  reporter.gravatar_md5 = gravatar_md5.update(reporter.address.toLowerCase().trim())
+  return reporter
+}
+
 function send_response(socket, response_id, payload) {
   socket.emit("response", {
     header: {response_id: response_id},
@@ -83,7 +90,7 @@ var issues = io.of("/issues").on('connection', function (socket) {
       var model = {
         subject: headers.subject,
         description: body.bodyText,
-        reporter: headers.addressesFrom[0],
+        reporter: add_gravatar_to_reporter(headers.addressesFrom[0]),
         created_at: new Date(headers.messageDate).toJSON(),
         message_id: headers.messageId
       }
