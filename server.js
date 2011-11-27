@@ -59,6 +59,23 @@ function send_response(socket, response_id, payload) {
   return socket
 }
 
+function lookup_issue_by_message_id(headers, callback) {
+  var message_id
+  if (typeof headers === "string") message_id = headers
+  else {
+    message_id = _.find(headers.secondary, function(header) {
+      return header.name == "references"
+    }).value[0].toString()
+  }
+
+  couchdb_request({
+    path: "http://127.0.0.1:5984/hotboy_inc_development/_design/couchapp/_view/by_message_id?reduce=false&limit=1&include_docs=true&key=%22"+message_id+"%22"
+  }, function (err, data) {
+    if (err || data.rows.length === 0) callback()
+    else callback(data.rows[0].doc)
+  })
+}
+
 var issues = io.of("/issues").on('connection', function (socket) {
 
   setInterval(function() {
