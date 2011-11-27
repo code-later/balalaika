@@ -106,6 +106,19 @@ var issues = io.of("/issues").on('connection', function (socket) {
         model.rev = response.rev
 
         socket.emit("new", {payload: model})
+
+        var message = ""
+        message += "Hey " + model.reporter.name + "! \n"
+        message += "Your issue has been created!\n\n"
+        message += "http://localhost/4567/issues/"+model.id+"\n\n"
+        message += "Kiss,\nFelicia"
+
+        var to = model.reporter.name + " <"+model.reporter.address+">"
+
+        email.send(to, "Issue created!", message, model.message_id, function(err, message){
+          if (err) console.log("Error: ", err)
+          // if (message) console.log("Message: ", message)
+        })
       })
     })
   }, 15000)
